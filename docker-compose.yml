@@ -1,13 +1,13 @@
 version: '3'
 services:
   nextcloud-db:
-    image: 'postgres'
+    image: 'postgres:latest'
     ports:
-      - 4321:4321
+      - 5432:5432
     volumes:
-      - ./nextcloud-db:/
-    environment:
-      TEST: variable
+      - ./nextcloud-db:/var/lib/postgresql/data
+    env_file:
+      - ./.env
   # nextcloud:
   # pihole:
   # plex:
