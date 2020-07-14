@@ -5,58 +5,68 @@ services:
     image: 'nextcloud:latest'
     ports:
       - 8080:80
+    volumes:
+      - /mnt/media-storage/nextcloud/data:/var/www/html
     depends_on:
-      - nextcloud-db
-    # links:
-    #   - 'nextcloud-db:postgres'
+      - postgres
+      - redis
+    links:
+      - postgres
+      - redis
+    env_file:
+      - ./nextcloud.env
     restart: unless-stopped
 
-  nextcloud-db:
-    # build:
-    #   context: ./nextcloud-db
+  postgres:
     image: 'postgres:latest'
     ports:
       - 5432:5432
     volumes:
-      - ./nextcloud-db/data:/var/lib/postgresql/data
+      - /mnt/media-storage/nextcloud/db:/var/lib/postgresql/data
     env_file:
-      - ./.env
+      - ./postgres.env
     restart: unless-stopped
 
-  pihole:
-    image: pihole/pihole:latest
+  redis:
+    image: 'redis:latest'
     ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "67:67/udp"
-      - "80:80/tcp"
-      - "443:443/tcp"
-    environment:
-      TZ: 'America/Los Angeles'
-      WEBPASSWORD: 'test-password'
-    volumes:
-       - './etc-pihole/:/etc/pihole/'
-       - './etc-dnsmasq.d/:/etc/dnsmasq.d/'
-    dns:
-      - 127.0.0.1
-      - 1.1.1.1
-    # Recommended but not required (DHCP needs NET_ADMIN)
-    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
-    cap_add:
-      - NET_ADMIN
+      - 6379:6379
     restart: unless-stopped
 
-  plex:
-    image: linuxserver/plex
-    network_mode: host
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - VERSION=docker
-      - UMASK_SET=022 # Optional
-      - PLEX_CLAIM= # Optional
-    volumes:
-      - /path/to/library:/config
-      - /path/to/tvseries:/tv
-      - /path/to/movies:/movies
-    restart: unless-stopped
+  # pihole:
+  #   image: pihole/pihole:latest
+  #   ports:
+  #     - "53:53/tcp"
+  #     - "53:53/udp"
+  #     - "67:67/udp"
+  #     - "80:80/tcp"
+  #     - "443:443/tcp"
+  #   environment:
+  #     TZ: 'America/Los Angeles'
+  #     WEBPASSWORD: 'test-password'
+  #   volumes:
+  #      - './etc-pihole/:/etc/pihole/'
+  #      - './etc-dnsmasq.d/:/etc/dnsmasq.d/'
+  #   dns:
+  #     - 127.0.0.1
+  #     - 1.1.1.1
+  #   # Recommended but not required (DHCP needs NET_ADMIN)
+  #   #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+  #   cap_add:
+  #     - NET_ADMIN
+  #   restart: unless-stopped
+
+  # plex:
+  #   image: linuxserver/plex
+  #   network_mode: host
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - VERSION=docker
+  #     - UMASK_SET=022 # Optional
+  #     - PLEX_CLAIM= # Optional
+  #   volumes:
+  #     - /path/to/library:/config
+  #     - /path/to/tvseries:/tv
+  #     - /path/to/movies:/movies
+  #   restart: unless-stopped
